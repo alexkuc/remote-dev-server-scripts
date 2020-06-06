@@ -2,7 +2,11 @@
 
 BASEPATH="$(pwd)/"
 
-fswatch -xLr0e "/\.git/" --event-flag-separator=', ' ./ | while read -rd "" FILE EVENT
+fswatch -xLr0 --event-flag-separator=', ' ./ \
+    -e "/\.git" \
+    -e "/node_modules" \
+    -e "/dist" \
+| while read -rd "" FILE EVENT
 do
     echo ""
     echo "File: ${FILE#$BASEPATH}"
