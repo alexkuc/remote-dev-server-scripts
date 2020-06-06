@@ -8,6 +8,7 @@ do
     echo "File: ${FILE#$BASEPATH}"
     echo "Event: $EVENT"
     echo "Rsync: running…"
-    ./dev-server/sync.sh
+    FOLDER=$(dirname "${BASH_SOURCE[0]}")
+    "$FOLDER/sync.sh"
     echo ""
 done
