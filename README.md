@@ -6,6 +6,10 @@ Clone this repository as a [sub-module](https://git-scm.com/book/en/v2/Git-Tools
 
 `git submodule add https://github.com/alexkuc/remote-dev-server-scripts.git`
 
+`./watch.sh` to watch current folder (PWD) for changes which get synced to remote
+
+`./sync.sh` one-off sync of current folder (PWD) with remote
+
 Given how everyone's setup is going to be different, this repository contains some concrete assumptions which are listed below:
 
 - you have rsync installed locally *and* remotely
