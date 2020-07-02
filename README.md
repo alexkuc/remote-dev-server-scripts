@@ -1,5 +1,7 @@
 ### Introduction
 
+## Manual Scripts
+
 This is a collection of Bash scripts to synchronize changes from local to remote. These scripts are used as a part of an article - [Create Remote Development Server](https://alexkuc.github.io/articles/create-remote-dev-server/).
 
 Clone this repository as a [sub-module](https://git-scm.com/book/en/v2/Git-Tools-Submodules): 
