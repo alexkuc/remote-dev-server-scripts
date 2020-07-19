@@ -27,13 +27,18 @@ green() {
     echo -e "\033[0;32m$*\033[0m"
 }
 
+echo_config_name() {
+    name=$(basename "${CLOUD_CONFIG%.*}")
+    ext=$(basename "${CLOUD_CONFIG##*.}")
+    config="/tmp/$name.generated.$ext"
+    echo "$config"
+}
+
 generate_config() {
     echo "Generating config…"
     echo ""
 
-    name=$(basename "${CLOUD_CONFIG%.*}")
-    ext=$(basename "${CLOUD_CONFIG##*.}")
-    config="/tmp/$name.generated.$ext"
+    config=$(CLOUD_CONFIG="$CLOUD_CONFIG" echo_config_name)
 
     if [[ ! -e "$CLOUD_CONFIG" ]]; then
         echo ""
@@ -91,9 +96,7 @@ delete_tmp_cwd_host() {
 }
 
 delete_tmp_cloud_config() {
-    name=$(basename "${CLOUD_CONFIG%.*}")
-    ext=$(basename "${CLOUD_CONFIG##*.}")
-    config="/tmp/$name.generated.$ext"
+    config=$(CLOUD_CONFIG="$CLOUD_CONFIG" echo_config_name)
 
     if [[ ! -e "$config" ]]; then
         echo "No tmp file to delete ($config)"
@@ -160,9 +163,7 @@ create_droplet() {
         exit 1
     fi
 
-    name=$(basename "${CLOUD_CONFIG%.*}")
-    ext=$(basename "${CLOUD_CONFIG##*.}")
-    config="/tmp/$name.generated.$ext"
+    config=$(CLOUD_CONFIG="$CLOUD_CONFIG" echo_config_name)
 
     SSH_HOST=$(doctl compute droplet create "$NAME" \
       --image "$IMAGE" \
