@@ -134,16 +134,16 @@ delete_droplets_safe() {
 
     if [[ "$count" -gt 0 ]]; then
         yellow "Found $count instance(s) of droplet $NAME"
-        while [[ "$DELETE" != 'Y' && "$DELETE" != 'n' ]]; do
+        while [[ "$delete" = "${delete#[YyNn]}" ]]; do
             echo ""
-            read -r -p $'\033[0;33mDelete? [Y/n]\033[0m ' -n 1 DELETE
+            read -r -p $'\033[0;33mDelete? [Yy/Nn]\033[0m ' -n 1 delete
             echo ""
         done
-        case $DELETE in
-            Y)
+        case $delete in
+            [Yy])
                 delete_droplets_unsafe
                 ;;
-            n)
+            [Nn])
                 echo ""
                 exit 1
                 ;;
