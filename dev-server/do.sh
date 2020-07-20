@@ -44,7 +44,7 @@ generate_config() {
         echo ""
         red "Config $CLOUD_CONFIG does not exist!"
         red "It is required to generate config!"
-        exit 1
+        exit 66
     fi
 
     sed -e "s#{ssh-pubkey}#$(cat "$SSH_PUBKEY")#g" \
@@ -57,7 +57,7 @@ delete_droplets_unsafe() {
     if echo "$droplets" | grep -iq error; then
         echo ""
         red "Failed to delete droplets due to error: $droplets!"
-        exit 1
+        exit 70
     fi
 
     if [[ -z "$droplets" ]]; then
@@ -129,7 +129,7 @@ delete_droplets_safe() {
 
     if echo "$count" | grep -iq error; then
         red "Failed to count droplets due to error: $count!"
-        exit 1
+        exit 66
     fi
 
     if [[ "$count" -gt 0 ]]; then
@@ -145,7 +145,14 @@ delete_droplets_safe() {
                 ;;
             [Nn])
                 echo ""
-                exit 1
+                yellow "This script follows a singleton pattern, implying"
+                yellow "it supports only 1 active droplet at any given time"
+                yellow "To proceed forward, you are required to delete active"
+                yellow "droplet instance; you may do so by re-running this"
+                yellow "command 'do.sh $*' and replying 'y' to this question"
+                # non an error since user intended action;
+                # need to stop code because user wishes so
+                exit 0
                 ;;
         esac
     else
@@ -160,7 +167,7 @@ create_droplet() {
 
     if ! [[ -e "$CLOUD_CONFIG" ]]; then
         red "Cloud config '$CLOUD_CONFIG' does not exist!"
-        exit 1
+        exit 66
     fi
 
     config=$(CLOUD_CONFIG="$CLOUD_CONFIG" echo_config_name)
@@ -179,8 +186,9 @@ create_droplet() {
         echo ""
         echo "$SSH_HOST" > "$SSH_HOST_FILE"
     else
+        red "Failed to create droplet: $NAME"
         red "$SSH_HOST"
-        exit 1
+        exit 70
     fi
 
     echo "Waiting 30 seconds for droplet to boot…"
@@ -213,8 +221,11 @@ droplet_ready() {
                 sleep 10
                 ;;
             error)
+                config=$(echo_config_name)
+                red "Failed to configure droplet using cloud-init config:"
+                red "$config"
                 red "$(ssh_cmd cloud-init status -l)"
-                exit 1
+                exit 70
                 ;;
             done)
                 green "$(ssh_cmd tail -n 1 /var/log/cloud-init-output.log)"
@@ -225,8 +236,8 @@ droplet_ready() {
 
 sync() {
     if ! [[ -e "$SSH_HOST_FILE" ]]; then
-        red 'No tmp file (/tmp/dev_ssh_host)…'
-        exit 1
+        red "No tmp file ($SSH_HOST_FILE)…"
+        exit 70
     fi
 
     ssh_socket
@@ -266,9 +277,11 @@ watch() {
 ssh_host() {
     if [[ -z "$SSH_HOST" && ! -e "$SSH_HOST_FILE" ]]; then
         red "Unable to get SSH host IP address!"
-        red "Env var \$SSH_HOST is empty!"
-        red "Tmp file (/tmp/dev_ssh_host) is missing!"
-        exit 1
+        # echo literal, not value of variable
+        # shellcheck disable=SC2016
+        red 'Env var $SSH_HOST is empty!'
+        red "Tmp file ($SSH_HOST_FILE) is missing!"
+        exit 66
     else
         SSH_HOST=$(cat "$SSH_HOST_FILE")
     fi
@@ -376,10 +389,10 @@ cmd_run() {
 set_ssh_key_path() {
     read -r -p "Set path to your ssh key [$SSH_PUBKEY]: " ssh_pubkey
     echo ""
-    if [[ -n "${ssh_pubkey}" ]]; then
-        if [[ ! -e "${ssh_pubkey}" ]]; then
-            red "Config path '${ssh_pubkey}' does not exist!"
-            exit 1
+    if [[ -n "$ssh_pubkey" ]]; then
+        if [[ ! -e "$ssh_pubkey" ]]; then
+            red "Config path '$ssh_pubkey' does not exist!"
+            exit 66
         fi
         SSH_PUBKEY=ssh_pubkey
     fi
@@ -511,6 +524,8 @@ for arg in "$@"; do
 
     *)
         red "Parameter(s) '$arg' is unsupported! Try 'do.sh help' to see available commands!"
+        # http://tldp.org/LDP/abs/html/exitcodes.html
+        exit 64
         ;;
 esac
 done
