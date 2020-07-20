@@ -351,7 +351,40 @@ copy_host() {
     fi
 }
 
-copy_files() {
+copy_from_local() {
+    # $arg = current argument (string)
+    # $next_args = next arguments excluding current (array)
+    # see for…in loop at the bottom for details
+
+    ssh_host
+    ssh_socket
+
+    # ${#paramter} -> get array length
+    # $next_args[*] -> get array as string separated by $IFS
+    files_count="${#next_args[*]}"
+
+    # copying only 1 file
+    if [[ "$files_count" -eq 1 ]]; then
+        file="${next_args[*]}"
+        scp -i "$SSH_KEY" \
+            -o ControlMaster=auto \
+            -o ControlPath="$SSH_SOCKET" \
+            -o ControlPersist=600 \
+        -r "$file" "$SSH_USER@$SSH_HOST:./"
+    fi
+
+    # copying multiple (1+) files
+    if [[ "$files_count" -gt 1 ]]; then
+        # https://stackoverflow.com/a/21691584/4343719
+        scp -i "$SSH_KEY" \
+            -o ControlMaster=auto \
+            -o ControlPath="$SSH_SOCKET" \
+            -o ControlPersist=600 \
+        -r "${next_args[@]}" "$SSH_USER@$SSH_HOST:./"
+    fi
+}
+
+copy_from_remote() {
     # $arg = current argument (string)
     # $next_args = next arguments excluding current (array)
     # see for…in loop at the bottom for details
@@ -362,6 +395,7 @@ copy_files() {
     fi
 
     ssh_host
+    ssh_socket
 
     # ${#paramter} -> get array length
     # $next_args[*] -> get array as string separated by $IFS
@@ -370,19 +404,21 @@ copy_files() {
     # copying only 1 file
     if [[ "$files_count" -eq 1 ]]; then
         file="${next_args[*]}"
-        scp -i "$SSH_KEY" -r "$SSH_USER@$SSH_HOST:$file" ./
+        scp -i "$SSH_KEY" \
+            -o ControlMaster=auto \
+            -o ControlPath="$SSH_SOCKET" \
+            -o ControlPersist=600 \
+        -r "$SSH_USER@$SSH_HOST:$file" ./
     fi
 
     # copying multiple (1+) files
     if [[ "$files_count" -gt 1 ]]; then
-        files=''
-        last_i=${#next_args[*]}
-        last_i=$((last_i-1))
-        for FILE in ${next_args[*]:0:$last_i}; do
-            files+="$FILE,"
-        done
-        files="$files${next_args[$last_i]}"
-        scp -i "$SSH_KEY" -r "$SSH_USER@$SSH_HOST:{$files}" ./
+        # https://stackoverflow.com/a/21691584/4343719
+        scp -i "$SSH_KEY" \
+            -o ControlMaster=auto \
+            -o ControlPath="$SSH_SOCKET" \
+            -o ControlPersist=600 \
+        -r "$SSH_USER@$SSH_HOST:${next_args[*]}" ./
     fi
 }
 
@@ -495,16 +531,33 @@ for arg in "$@"; do
 
     ssh)
         ssh_run
+        # terminate early
+        # all subsequent parameters are passed to function
+        # see function ssh() for details
         break;
         ;;
 
     cmd)
         cmd_run
+        # terminate early
+        # all subsequent parameters are passed to function
+        # see function cmd() for details
         break;
         ;;
 
     scp|dist)
-        copy_files
+        copy_from_remote
+        # terminate early
+        # all subsequent parameters are passed to function
+        # see function copy_from_remote() for details
+        break
+        ;;
+
+    cp|copy)
+        copy_from_local
+        # terminate early
+        # all subsequent parameters are passed to function
+        # see function copy_from_local() for details
         break
         ;;
 
@@ -531,6 +584,7 @@ for arg in "$@"; do
         echo "ssh <cmd> execute command on droplet"
         echo "cmd       ssh <cmd> and replace cwd with local"
         echo "scp<path> copy from remote to local (cwd)"
+        echo "copy<path>copy from local to remote (~/.repo/)"
         echo "dist      shortcut to copying dist/ from remote"
         echo "host      show public ip of remote"
         echo "config    create config from env var CLOUD_CONFIG"
