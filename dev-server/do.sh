@@ -352,15 +352,29 @@ copy_host() {
 }
 
 copy_files() {
+    # $arg = current argument (string)
+    # $next_args = next arguments excluding current (array)
+    # see for…in loop at the bottom for details
+
+    # if calling 'do.sh dist', copy dist/ from remote
     if [[ "$arg" = 'dist' ]]; then
         next_args=('dist/')
     fi
 
     ssh_host
 
-    if [[ ${#next_args[*]} -eq 1 ]]; then
-        scp -i "$SSH_KEY" -r "$SSH_USER@$SSH_HOST:${next_args[*]}" ./
-    else
+    # ${#paramter} -> get array length
+    # $next_args[*] -> get array as string separated by $IFS
+    files_count="${#next_args[*]}"
+
+    # copying only 1 file
+    if [[ "$files_count" -eq 1 ]]; then
+        file="${next_args[*]}"
+        scp -i "$SSH_KEY" -r "$SSH_USER@$SSH_HOST:$file" ./
+    fi
+
+    # copying multiple (1+) files
+    if [[ "$files_count" -gt 1 ]]; then
         files=''
         last_i=${#next_args[*]}
         last_i=$((last_i-1))
@@ -373,6 +387,8 @@ copy_files() {
 }
 
 ssh_run() {
+    # $next_args = next arguments excluding current (array)
+    # see for…in loop at the bottom for details
     if [[ -n "${next_args[0]}" ]]; then
         ssh_cmd -t "${next_args[@]}"
     else
@@ -402,8 +418,10 @@ i=0
 
 for arg in "$@"; do
 
+    # exclude current and previous args
+    # array slicing using $i index
     i=$((i + 1))
-    next_args=("${@:$((i+1))}") # exclude current and previous args
+    next_args=("${@:$((i+1))}")
 
     case $arg in
     up)
@@ -485,7 +503,7 @@ for arg in "$@"; do
         break;
         ;;
 
-    cp|scp|copy|dist)
+    scp|dist)
         copy_files
         break
         ;;
@@ -512,9 +530,7 @@ for arg in "$@"; do
         echo "ssh       start interactive ssh session"
         echo "ssh <cmd> execute command on droplet"
         echo "cmd       ssh <cmd> and replace cwd with local"
-        echo "cp <path> copy from remote to local (cwd)"
-        echo "copy      see cp <path>"
-        echo "scp       see cp <path>"
+        echo "scp<path> copy from remote to local (cwd)"
         echo "dist      shortcut to copying dist/ from remote"
         echo "host      show public ip of remote"
         echo "config    create config from env var CLOUD_CONFIG"
