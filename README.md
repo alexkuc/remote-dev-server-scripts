@@ -2,7 +2,7 @@
 
 ## Dev Server (DigitalOcean)
 
-Use this collection to automatically configure DigitalOcean droplet using [cloud-init](https://cloudinit.readthedocs.io/en/latest/). Use either `cloud-config.sh` or `cloud-config.yml` as both provide the same configuration. Script defaults to `./dev-server/cloud-conf.yml` but you can override that behaviour. See env vars defined at the top of the `do.sh`. Script `do.sh` automates a number of actions. To get start with it, do `do.sh help` to list available commands. To make the script available from anywhere, copy it to `/usr/local/bin` (ideally symlink it to always keep it up-to-date). For a more complete documentation on how to use this script, please refer to [this article](https://alexkuc.github.io/articles/create-remote-dev-server-part-2/).
+Use this script to automatically install and configure DigitalOcean droplet using [cloud-init](https://cloudinit.readthedocs.io/en/latest/). Use either `cloud-config.sh` or `cloud-config.yml` as both provide the same configuration. Script defaults to `./dev-server/cloud-conf.yml` but you can override that behaviour. See env vars defined at the top of the `do.sh`. This script automates a number of actions. To get start with it, do `do.sh help` to list available commands. To make the script available from anywhere, copy it to `/usr/local/bin` (ideally symlink it to always keep it up-to-date). For a more complete documentation on how to use this script, please refer to [this article](https://alexkuc.github.io/articles/create-remote-dev-server-part-2/).
 
 ## Manual Scripts
 
