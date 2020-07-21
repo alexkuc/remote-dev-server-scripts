@@ -67,6 +67,7 @@ delete_droplets_unsafe() {
         echo ""
         return
     fi
+
     echo ""
     echo "Deleting previous instance(s)…"
     echo ""
@@ -80,8 +81,10 @@ delete_tmp_ssh_host() {
         echo ""
         return
     fi
+
     echo "Deleting tmp file ($SSH_HOST_FILE)…"
     echo ""
+
     rm "$SSH_HOST_FILE"
 }
 
@@ -91,8 +94,10 @@ delete_tmp_cwd_host() {
         echo ""
         return
     fi
+
     echo "Deleting tmp file ($SSH_CWD_FILE)…"
     echo ""
+
     rm "$SSH_CWD_FILE"
 }
 
@@ -107,6 +112,7 @@ delete_tmp_cloud_config() {
 
     echo "Deleting tmp file ($config)…"
     echo ""
+
     rm "$config"
 }
 
@@ -135,11 +141,13 @@ delete_droplets_safe() {
 
     if [[ "$count" -gt 0 ]]; then
         yellow "Found $count instance(s) of droplet $NAME"
+
         while [[ "$delete" = "${delete#[YyNn]}" ]]; do
             echo ""
             read -r -p $'\033[0;33mDelete? [Yy/Nn]\033[0m ' -n 1 delete
             echo ""
         done
+
         case $delete in
             [Yy])
                 delete_droplets_unsafe
@@ -149,6 +157,7 @@ delete_droplets_safe() {
                 yellow "This script follows a singleton pattern, implying"
                 yellow "it supports only 1 active droplet at any given time"
                 echo ""
+
                 yellow "To proceed forward, you are required to delete active"
                 yellow "droplet instance; you may do so by re-running this"
                 yellow "command 'do.sh $*' and replying 'y' to this question"
@@ -183,15 +192,17 @@ create_droplet() {
       --no-header \
       --wait)
 
-    if ! echo "$SSH_HOST" | grep -iq error; then
-        green "$SSH_HOST"
-        echo ""
-        echo "$SSH_HOST" > "$SSH_HOST_FILE"
-    else
+    if echo "$SSH_HOST" | grep -iq error; then
         red "Failed to create droplet: $NAME"
         red "Received the following error:"
         red "$SSH_HOST"
         exit 70
+    fi
+
+    if ! echo "$SSH_HOST" | grep -iq error; then
+        green "$SSH_HOST"
+        echo ""
+        echo "$SSH_HOST" > "$SSH_HOST_FILE"
     fi
 
     echo "Waiting 30 seconds for droplet to boot…"
@@ -296,9 +307,9 @@ ssh_host() {
         red "Tmp file ($SSH_HOST_FILE) is missing!"
         red "Either remote is not running or could not write $SSH_HOST_FILE!"
         exit 66
-    else
-        SSH_HOST=$(cat "$SSH_HOST_FILE")
     fi
+
+    SSH_HOST=$(cat "$SSH_HOST_FILE")
 }
 
 ssh_socket() {
@@ -319,9 +330,10 @@ ssh_cwd() {
     if [[ -z "$SSH_CWD" && ! -e "$SSH_CWD_FILE" ]]; then
         SSH_CWD=$(ssh_cmd pwd)
         echo "$SSH_CWD" > "$SSH_CWD_FILE"
-    else
-        SSH_CWD=$(cat "$SSH_CWD_FILE")
+        return
     fi
+
+    SSH_CWD=$(cat "$SSH_CWD_FILE")
 }
 
 ssh_cmd() {
@@ -357,12 +369,14 @@ down() {
 
 copy_host() {
     ssh_host
+
     if [[ -n $(command -v pbcopy) ]]; then
         echo "$SSH_HOST     (copied via pbcopy)"
         echo -e "$SSH_HOST\c" | pbcopy
-    else
-        echo "$SSH_HOST"
+        return
     fi
+
+    echo "$SSH_HOST"
 }
 
 copy_from_local() {
@@ -439,9 +453,12 @@ copy_from_remote() {
 ssh_run() {
     # $next_args = next arguments excluding current (array)
     # see for…in loop at the bottom for details
+
     if [[ -n "${next_args[0]}" ]]; then
         ssh_cmd -t "${next_args[@]}"
-    else
+    fi
+
+    if [[ ! -n "${next_args[0]}" ]]; then
         ssh_cmd -t
     fi
 }
@@ -460,6 +477,7 @@ set_ssh_key_path() {
             red "Config path '$ssh_pubkey' does not exist!"
             exit 66
         fi
+
         SSH_PUBKEY=ssh_pubkey
     fi
 }
@@ -547,7 +565,7 @@ for arg in "$@"; do
         ssh_run
         # terminate early
         # all subsequent parameters are passed to function
-        # see function ssh() for details
+        # see function ssh_run() for details
         break;
         ;;
 
