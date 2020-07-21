@@ -8,9 +8,9 @@ CLOUD_CONFIG="${CLOUD_CONFIG:-./dev-server/cloud-config.yml}"
 SSH_KEY="${SSH_KEY:-$HOME/.ssh/developer}"
 SSH_PUBKEY="${SSH_PUBKEY:-$HOME/.ssh/developer.pub}"
 SSH_USER="${SSH_USER:-developer}"
-SSH_HOST="${SSH_HOST:-}"
-SSH_SOCKET="${SSH_SOCKET:-}"
-SSH_CWD="${SSH_CWD:-}"
+SSH_HOST="${SSH_HOST:-}" # configured at runtime, see ssh_host() function
+SSH_SOCKET="${SSH_SOCKET:-}" # configured at runtime, see ssh_socket() function
+SSH_CWD="${SSH_CWD:-}" # configured on-demand when running ssh_cwd() function
 LOCAL_CWD="${LOCAL_CWD:-$(pwd)}"
 SSH_HOST_FILE="${SSH_HOST_FILE:-/tmp/dev_ssh_host}"
 SSH_CWD_FILE="${SSH_CWD_FILE:-/tmp/dev_ssh_cwd}"
@@ -56,7 +56,8 @@ delete_droplets_unsafe() {
 
     if echo "$droplets" | grep -iq error; then
         echo ""
-        red "Failed to delete droplets due to error: $droplets!"
+        red "Failed to delete droplets due to error:"
+        red "$droplets"
         exit 70
     fi
 
@@ -104,7 +105,7 @@ delete_tmp_cloud_config() {
         return
     fi
 
-    echo "Deleting tmp file ($config)"
+    echo "Deleting tmp file ($config)…"
     echo ""
     rm "$config"
 }
@@ -147,6 +148,7 @@ delete_droplets_safe() {
                 echo ""
                 yellow "This script follows a singleton pattern, implying"
                 yellow "it supports only 1 active droplet at any given time"
+                echo ""
                 yellow "To proceed forward, you are required to delete active"
                 yellow "droplet instance; you may do so by re-running this"
                 yellow "command 'do.sh $*' and replying 'y' to this question"
@@ -187,13 +189,16 @@ create_droplet() {
         echo "$SSH_HOST" > "$SSH_HOST_FILE"
     else
         red "Failed to create droplet: $NAME"
+        red "Received the following error:"
         red "$SSH_HOST"
         exit 70
     fi
 
     echo "Waiting 30 seconds for droplet to boot…"
     echo ""
-    sleep 30 # avoid connecting too early
+    # avoid connecting too early otherwise will run into various issues
+    # such as no ssh connectivity or unresponsive host
+    sleep 30
 }
 
 ssh_agent() {
@@ -207,6 +212,8 @@ ssh_agent() {
     echo ""
 
     echo "Caching ssh-key passphrase…"
+    # need to send anything to remote to cache ssh-key passphrase
+    # echo " " produces no output so it is suitable choice
     ssh_cmd echo " "
 }
 
@@ -218,12 +225,16 @@ droplet_ready() {
             running)
                 echo "cloud-init is still running…"
                 echo ""
+                # 10 seconds seems like a good balance between waiting for too
+                # long i.e. host is ready but the script is still 'sleeping' or
+                # checking too frequently leading to too many messages to user
                 sleep 10
                 ;;
             error)
                 config=$(echo_config_name)
                 red "Failed to configure droplet using cloud-init config:"
                 red "$config"
+                red "Cloud-init configuration failed with status:"
                 red "$(ssh_cmd cloud-init status -l)"
                 exit 70
                 ;;
@@ -243,6 +254,8 @@ sync() {
     ssh_socket
 
     if [[ ! -e "${HOME}/.ssh/sockets/" ]]; then
+        # .ssh dir should exist as without it ssh connection not possible
+        # (implying that OpenSSH is not configured)
         mkdir "${HOME}/.ssh/sockets/"
     fi
 
@@ -269,7 +282,7 @@ watch() {
         echo "File: ${file#$(pwd)/}"
         echo "Event: $event"
         echo "Rsync: running…"
-        sync # <- sync function call here
+        sync # sync() function call
         echo ""
     done
 }
@@ -281,6 +294,7 @@ ssh_host() {
         # shellcheck disable=SC2016
         red 'Env var $SSH_HOST is empty!'
         red "Tmp file ($SSH_HOST_FILE) is missing!"
+        red "Either remote is not running or could not write $SSH_HOST_FILE!"
         exit 66
     else
         SSH_HOST=$(cat "$SSH_HOST_FILE")
