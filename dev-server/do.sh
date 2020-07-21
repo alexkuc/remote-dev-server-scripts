@@ -38,7 +38,7 @@ generate_config() {
     echo "Generating config…"
     echo ""
 
-    config=$(CLOUD_CONFIG="$CLOUD_CONFIG" echo_config_name)
+    config=$(echo_config_name)
 
     if [[ ! -e "$CLOUD_CONFIG" ]]; then
         echo ""
@@ -96,7 +96,7 @@ delete_tmp_cwd_host() {
 }
 
 delete_tmp_cloud_config() {
-    config=$(CLOUD_CONFIG="$CLOUD_CONFIG" echo_config_name)
+    config=$(echo_config_name)
 
     if [[ ! -e "$config" ]]; then
         echo "No tmp file to delete ($config)"
@@ -170,7 +170,7 @@ create_droplet() {
         exit 66
     fi
 
-    config=$(CLOUD_CONFIG="$CLOUD_CONFIG" echo_config_name)
+    config=$(echo_config_name)
 
     SSH_HOST=$(doctl compute droplet create "$NAME" \
       --image "$IMAGE" \
