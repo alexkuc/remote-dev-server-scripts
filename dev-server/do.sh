@@ -559,12 +559,16 @@ for arg in "$@"; do
         break;
         ;;
 
-    scp|dist)
+    scp)
         copy_from_remote
         # terminate early
         # all subsequent parameters are passed to function
         # see function copy_from_remote() for details
         break
+        ;;
+
+    dist)
+        copy_from_remote
         ;;
 
     cp|copy)
@@ -587,23 +591,25 @@ for arg in "$@"; do
 
     help)
         echo ""
-        echo "up         create dev server"
-        echo "down       destory dev server"
-        echo "reset      re-create dev server"
-        echo "sync       rsync from local to remote"
+        echo "up         create dev server *"
+        echo "down       destory dev server *"
+        echo "reset      re-create dev server *"
+        echo "sync       rsync from local to remote *"
         echo "watch      watch local for changes and sync"
-        echo "deps       install Node deps on remote"
+        echo "deps       install Node deps on remote *"
         echo "prep[are]  shortcut for sync -> deps -> watch"
         echo "ssh        start interactive ssh session"
         echo "ssh <cmd>  execute command on droplet"
-        echo "cmd        ssh <cmd> and replace cwd with local"
+        echo "cmd <cmd>  ssh <cmd> and replace cwd with local"
         echo "scp<path>  copy from remote to local (cwd)"
         echo "copy<path> copy from local to remote (~/.repo/)"
         echo "cp <path>  alias to copy command"
-        echo "dist       shortcut to copying dist/ from remote"
-        echo "host       show public ip of remote"
-        echo "config     create config from env var CLOUD_CONFIG"
+        echo "dist       shortcut to copying dist/ from remote *"
+        echo "host       show public ip of remote *"
+        echo "config     create config from env var CLOUD_CONFIG *"
         echo "help       show available commands"
+        echo ""
+        echo "* these commands support chaining, e.g. do.sh up prep sync"
         echo ""
         ;;
 

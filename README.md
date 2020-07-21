@@ -29,12 +29,16 @@ This is not a homegrown puppet/chef/ansible/etc but rather a way to automaticall
 What makes this script better than me simply using `doctl` on my own?:
 
 - one-button solution: to get started, simple do: `do.sh up`
+- command chaining (only certain commands)*
+  - see `do.sh help` for a list of commands which support chaining
 - create ssh socket to avoid re-connecting to remote host for every command
 - re-write remote path with local (`do.sh cmd`)
   - when running a command such as `ls -l`, replace remote cwd with local cwd
   - useful for debugging and investigating failed unit tests
 - useful built-in commands, e.g. `do.sh scp` to copy from remote to local cwd
   - for a full list of commands, see `do.sh help`
+
+>*only commands which support a fixed number of arguments, e.g. `do.sh up prep sync`
 
 ## Manual Scripts
 
