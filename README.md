@@ -1,8 +1,40 @@
-### Introduction
+# Introduction
 
 ## Dev Server (DigitalOcean)
 
-Use this script to automatically install and configure DigitalOcean droplet using [cloud-init](https://cloudinit.readthedocs.io/en/latest/). Use either `cloud-config.sh` or `cloud-config.yml` as both provide the same configuration. Script defaults to `./dev-server/cloud-conf.yml` but you can override that behaviour. See env vars defined at the top of the `do.sh`. This script automates a number of actions. To get start with it, do `do.sh help` to list available commands. To make the script available from anywhere, copy it to `/usr/local/bin` (ideally symlink it to always keep it up-to-date). For a more complete documentation on how to use this script, please refer to [this article](https://alexkuc.github.io/articles/create-remote-dev-server-part-2/).
+### Requirements
+
+- DigitalOcean account
+- Bash, at least version 4
+- doctl
+- rsync (`do.sh sync`)
+- fswatch (`do.sh watch`)
+- scp (`do.sh copy` `do.sh scp`)
+
+### Introduction
+
+Use this script to automatically install and configure DigitalOcean droplet using [cloud-init](https://cloudinit.readthedocs.io/en/latest/). Use either `cloud-config.sh` or `cloud-config.yml` as both provide the same configuration. The script defaults to `./dev-server/cloud-conf.yml` but you can override that behavior. See env vars defined at the top of the `do.sh`. This script automates several actions. To get started with it, do `do.sh help`, to list available commands. To make this script available from anywhere, copy it to `/usr/local/bin` (ideally symlink it to always keep it up-to-date). For more complete documentation on how to use this script, please refer to [this article](https://alexkuc.github.io/articles/create-remote-dev-server-part-2/). Technically speaking, it would be very hard to make this script accommodate every possible configuration scenario out there. So there are two options, either to submit a PR or fork this repository.
+
+### Intended Audience
+
+This is not a homegrown puppet/chef/ansible/etc but rather a way to automatically provision a single remote development server. The idea is to move heavy processing from a local to a remote machine. Another scenario is where your local environment is not the most suitable. For example, OSX and Docker support where on Linux Docker runs much much better. Before you accuse me of being incompetent, I am referring to these issues:
+
+- [File access in mounted volumes extremely slow #77](https://github.com/docker/for-mac/issues/77)
+- [docker on Mac OS High Sierra is so slow: 20 time slower than Ubuntu #2659](https://github.com/docker/for-mac/issues/2659)
+- [Docker in MacOs is very slow](https://stackoverflow.com/questions/55951014/docker-in-macos-is-very-slow)
+- [Docker for Mac vs docker-toolbox?](https://www.reddit.com/r/docker/comments/5v8fc7/docker_for_mac_vs_dockertoolbox/)
+
+### Cool Features
+
+What makes this script better than me simply using `doctl` on my own?:
+
+- one-button solution: to get started, simple do: `do.sh up`
+- create ssh socket to avoid re-connecting to remote host for every command
+- re-write remote path with local (`do.sh cmd`)
+  - when running a command such as `ls -l`, replace remote cwd with local cwd
+  - useful for debugging and investigating failed unit tests
+- useful built-in commands, e.g. `do.sh scp` to copy from remote to local cwd
+  - for a full list of commands, see `do.sh help`
 
 ## Manual Scripts
 
