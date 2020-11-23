@@ -377,6 +377,13 @@ down() {
 }
 
 copy_host() {
+    if [[ ! -e "$CLOUD_CONFIG" ]]; then
+        echo ""
+        red "Config $CLOUD_CONFIG does not exist!"
+        red "It is required to generate config!"
+        exit 66
+    fi
+
     ssh_host
 
     if [[ -n $(command -v pbcopy) ]]; then
