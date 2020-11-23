@@ -308,7 +308,7 @@ watch() {
 }
 
 ssh_host() {
-    if [[ -z "$SSH_HOST" && ! -e "$SSH_HOST_FILE" ]]; then
+    if [[ ! -e "$SSH_HOST_FILE" ]]; then
         red "Unable to get SSH host IP address!"
         # echo literal, not value of variable
         # shellcheck disable=SC2016
