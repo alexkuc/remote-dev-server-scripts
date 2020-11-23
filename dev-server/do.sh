@@ -218,6 +218,13 @@ ssh_agent() {
     eval ssh-agent
     echo ""
 
+    if [[ ! -e "$SSH_KEY" ]]; then
+        echo ""
+        red "Failed to find $SSH_KEY!"
+        echo ""
+        exit 1
+    fi
+
     echo "Adding ssh-key to ssh-agent…"
     ssh-add "$SSH_KEY"
     echo ""
