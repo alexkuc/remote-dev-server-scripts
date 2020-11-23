@@ -281,6 +281,8 @@ sync() {
         --exclude=/\.git \
         --exclude=/node_modules \
         --exclude=/dist \
+        --exclude=/.yarn/cache \
+        --exclude=/.yarn/unplugged \
         -e "ssh -i $SSH_KEY \
             -o \"ControlMaster=auto\" \
             -o \"ControlPath=$SSH_SOCKET\" \
